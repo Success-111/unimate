@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "unimate",
-    "slug": "unimate",
+    "name": "unimate_frontend",
+    "slug": "unimate_frontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "unimate",
+    "scheme": "unimatefrontend",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
