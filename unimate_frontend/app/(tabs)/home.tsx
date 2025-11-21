@@ -15,7 +15,9 @@ export default function Home() {
           <Text style={styles.welcome}>Welcome, Student 👋</Text>
           <Text style={styles.sub}>1st Semester • 300 Level</Text>
         </View>
+        <Link href="/(tabs)/profile" asChild>
         <TouchableOpacity style={styles.avatar}><Text style={{ color: '#fff', fontWeight: '700' }}>S</Text></TouchableOpacity>
+        </Link>
       </View>
 
       <View style={{ padding: 16 }}>

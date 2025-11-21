@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 const mockNotes = [
   { id: '1', title: 'Intro to Mechanics', size: '2.4 MB', type: 'PDF', downloaded: true },
@@ -21,12 +22,25 @@ const mockEbooks = [
   { id: '7', title: 'Physics Foundations eBook', size: '5.6 MB', type: 'EPUB', downloaded: true },
 ];
 
+// Icon Resolver based on File Type
+function getIcon(type: string) {
+  switch (type.toUpperCase()) {
+    case "PDF":
+      return "document-text-outline";
+    case "PPTX":
+      return "tv-outline";
+    case "EPUB":
+      return "book-outline";
+    default:
+      return "document-outline";
+  }
+}
+
 export default function Materials() {
   const { course } = useLocalSearchParams<{ course?: string }>();
   const [activeTab, setActiveTab] = useState<'notes' | 'slides' | 'past' | 'ebook'>('notes');
   const [data, setData] = useState(mockNotes);
 
-  // Update data when tab changes
   useEffect(() => {
     if (activeTab === 'notes') setData(mockNotes);
     if (activeTab === 'slides') setData(mockSlides);
@@ -68,10 +82,23 @@ export default function Materials() {
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }) => (
           <View style={styles.item}>
+            {/* ICON */}
+            <Ionicons
+              name={getIcon(item.type)}
+              size={28}
+              color="#3D5AFE"
+              style={{ marginRight: 12 }}
+            />
+
+            {/* TEXT */}
             <View style={{ flex: 1 }}>
               <Text style={{ fontWeight: '600' }}>{item.title}</Text>
-              <Text style={{ color: '#616161' }}>{item.size} • {item.type}</Text>
+              <Text style={{ color: '#616161' }}>
+                {item.size} • {item.type}
+              </Text>
             </View>
+
+            {/* Download */}
             <TouchableOpacity style={styles.download}>
               <Text style={{ color: item.downloaded ? '#10B981' : '#3D5AFE' }}>
                 {item.downloaded ? 'Saved' : 'Download'}
