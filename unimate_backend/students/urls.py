@@ -8,10 +8,10 @@ from .views import (
 
 urlpatterns = [
     # AUTH
-    path("api/auth/register/", RegisterView.as_view()),
-    path("api/auth/login/", TokenObtainPairView.as_view()),
-    path("api/auth/refresh/", TokenRefreshView.as_view()),
-    path("api/auth/user/", UserDetailView.as_view()),
+    path("auth/register/", RegisterView.as_view(), name="register"),
+    path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("auth/user/", UserDetailView.as_view(), name="user_detail"),
 
     # LOOKUPS
     path("universities/", UniversityListView.as_view(), name="universities"),

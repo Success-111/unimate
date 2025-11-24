@@ -1,13 +1,31 @@
 from rest_framework import generics
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth.models import User
+
 from .models import University, Faculty, Department, Level, Semester
 from .serializers import (
+    RegisterSerializer,
+    UserSerializer,
     UniversitySerializer,
     FacultySerializer,
     DepartmentSerializer,
     LevelSerializer,
     SemesterSerializer,
 )
+
+# ----------------------- AUTH VIEWS -----------------------
+
+class RegisterView(generics.CreateAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = RegisterSerializer
+    queryset = User.objects.all()
+
+class UserDetailView(generics.RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return self.request.user
 
 # ----- PUBLIC LOOKUP ENDPOINTS -----
 
