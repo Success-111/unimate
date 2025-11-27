@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 
 // Use your PC's LAN IP so your phone can reach the dev server.
 // Replace 192.168.1.42 with your computer's local IP (same Wi‑Fi).
-const API_URL = "https://edbafbbae30b.ngrok-free.app/api/students";
+const API_URL = "https://35b8e2f22ebf.ngrok-free.app/api/students";
 
 // Alternatives:
 // const API_URL = "http://10.0.2.2:8000"; // Android emulator

@@ -3,7 +3,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import (
     RegisterView, UserDetailView,
     UniversityListView, FacultyListView,
-    DepartmentListView, LevelListView, SemesterListView
+    DepartmentListView, LevelListView, SemesterListView, VerifyView
 )
 
 urlpatterns = [
@@ -12,6 +12,7 @@ urlpatterns = [
     path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/user/", UserDetailView.as_view(), name="user_detail"),
+    path("auth/verify/", VerifyView.as_view(), name="verify"),
 
     # LOOKUPS
     path("universities/", UniversityListView.as_view(), name="universities"),
