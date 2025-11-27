@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,256 +8,341 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { setAuthToken } from "./utils/auth";
+import api from "./utils/api";
+import { saveTokens } from "./utils/auth";
+
+type Option = { label: string; value: number };
 
 export default function SignUp() {
   const router = useRouter();
 
   const [fullName, setFullName] = useState("");
 
-  const [university, setUniversity] = useState("");
-  const [faculty, setFaculty] = useState("");
-  const [department, setDepartment] = useState("");
-  const [level, setLevel] = useState("");
-  const [semester, setSemester] = useState("");
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [university, setUniversity] = useState<number | null>(null);
+  const [faculty, setFaculty] = useState<number | null>(null);
+  const [department, setDepartment] = useState<number | null>(null);
+  const [level, setLevel] = useState<number | null>(null);
+  const [semester, setSemester] = useState<number | null>(null);
+
+  const [universities, setUniversities] = useState<Option[]>([]);
+  const [faculties, setFaculties] = useState<Option[]>([]);
+  const [departments, setDepartments] = useState<Option[]>([]);
+  const [levels, setLevels] = useState<Option[]>([]);
+  const [semesters, setSemesters] = useState<Option[]>([]);
+
+  const [loading, setLoading] = useState(false);
+
+  // -------------------- UNIVERSITIES --------------------
+  useEffect(() => {
+    api
+      .get("/universities/")
+      .then((res) => {
+        setUniversities(
+          res.data.map((u: any) => ({
+            label: u.name,
+            value: Number(u.id),
+          }))
+        );
+      })
+      .catch((err) => console.log("UNI ERROR:", err));
+  }, []);
+
+  // -------------------- FACULTIES --------------------
+  useEffect(() => {
+    if (!university) return;
+
+    // reset
+    setFaculty(null);
+    setDepartment(null);
+    setLevel(null);
+    setSemester(null);
+    setFaculties([]);
+    setDepartments([]);
+    setLevels([]);
+    setSemesters([]);
+
+    api
+      .get(`/faculties/?university=${university}`)
+      .then((res) => {
+        setFaculties(
+          res.data.map((f: any) => ({
+            label: f.name,
+            value: Number(f.id),
+          }))
+        );
+      })
+      .catch((err) => console.log("FAC ERROR:", err));
+  }, [university]);
+
+  // -------------------- DEPARTMENTS --------------------
+  useEffect(() => {
+    if (!faculty) return;
+
+    setDepartment(null);
+    setLevel(null);
+    setSemester(null);
+    setDepartments([]);
+    setLevels([]);
+    setSemesters([]);
+
+    api
+      .get(`/departments/?faculty=${faculty}`)
+      .then((res) => {
+        setDepartments(
+          res.data.map((d: any) => ({
+            label: d.name,
+            value: Number(d.id),
+          }))
+        );
+      })
+      .catch((err) => console.log("DEP ERROR:", err));
+  }, [faculty]);
+
+  // -------------------- LEVELS --------------------
+  useEffect(() => {
+    if (!department) return;
+
+    setLevel(null);
+    setSemester(null);
+    setLevels([]);
+    setSemesters([]);
+
+    api
+      .get(`/levels/?department=${department}`)
+      .then((res) => {
+        setLevels(
+          res.data.map((l: any) => ({
+            label: l.name,
+            value: Number(l.id),
+          }))
+        );
+      })
+      .catch((err) => console.log("LEVEL ERROR:", err));
+  }, [department]);
+
+  // -------------------- SEMESTERS --------------------
+  useEffect(() => {
+    if (!level) return;
+
+    setSemester(null);
+    setSemesters([]);
+
+    api
+      .get(`/semesters/?level=${level}`)
+      .then((res) => {
+        setSemesters(
+          res.data.map((s: any) => ({
+            label: s.name,
+            value: Number(s.id),
+          }))
+        );
+      })
+      .catch((err) => console.log("SEM ERROR:", err));
+  }, [level]);
+
+  // -------------------- SIGNUP --------------------
   const handleSignUp = async () => {
-    await setAuthToken("demo-token");
-    router.replace("/(tabs)/home");
+    if (!fullName || !email || !password)
+      return alert("Fill all required fields");
+
+    setLoading(true);
+
+    try {
+      const [firstName, ...rest] = fullName.trim().split(" ");
+      const lastName = rest.join(" ");
+
+      await api.post("/auth/register/", {
+        username: email,
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName,
+        university_id: university,
+        faculty_id: faculty,
+        department_id: department,
+        level_id: level,
+        semester_id: semester,
+      });
+
+      const res = await api.post("/auth/login/", {
+        username: email,
+        password,
+      });
+
+      await saveTokens(res.data.access, res.data.refresh);
+
+      router.replace("/(tabs)/home");
+    } catch (err: any) {
+      console.log("SIGNUP ERROR:", err.response?.data);
+      alert("Signup failed");
+    }
+
+    setLoading(false);
   };
+
+  // helper
+  const Field = (props: any) => (
+    <View style={{ marginBottom: 18 }}>
+      <Text style={styles.label}>{props.label}</Text>
+      {props.children}
+    </View>
+  );
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
-        
+      <ScrollView showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Create Your Account</Text>
-        <Text style={styles.subtitle}>Provide your academic details to continue</Text>
 
-        {/* FULL NAME */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Full Name</Text>
+        <Field label="Full Name">
           <TextInput
-            placeholder="Enter full name"
             style={styles.input}
+            placeholder="Enter full name"
             value={fullName}
             onChangeText={setFullName}
           />
-        </View>
+        </Field>
 
-        {/* UNIVERSITY */}
-        <View style={styles.field}>
-          <Text style={styles.label}>University</Text>
+        <Field label="University">
           <RNPickerSelect
-            onValueChange={setUniversity}
-            placeholder={{ label: "Select University", value: "" }}
-            items={[
-              { label: "University of Calabar", value: "UNICAL" },
-              { label: "University of Lagos", value: "UNILAG" },
-              { label: "University of Ibadan", value: "UI" },
-            ]}
-            style={pickerSelectStyles}
+            onValueChange={(v) => setUniversity(Number(v))}
+            items={universities}
+            placeholder={{ label: "Select a University", value: null }}
+            style={pickerStyles}
           />
-        </View>
+        </Field>
 
-        {/* FACULTY */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Faculty</Text>
+        <Field label="Faculty">
           <RNPickerSelect
-            onValueChange={setFaculty}
-            placeholder={{ label: "Select Faculty", value: "" }}
-            items={[
-              { label: "Physical Sciences", value: "Physical Sciences" },
-              { label: "Engineering", value: "Engineering" },
-              { label: "Social Sciences", value: "Social Sciences" },
-            ]}
-            style={pickerSelectStyles}
+            onValueChange={(v) => setFaculty(Number(v))}
+            items={faculties}
+            placeholder={{
+              label: faculties.length
+                ? "Select Faculty"
+                : "Select University First",
+              value: null,
+            }}
+            style={pickerStyles}
           />
-        </View>
+        </Field>
 
-        {/* DEPARTMENT */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Department</Text>
+        <Field label="Department">
           <RNPickerSelect
-            onValueChange={setDepartment}
-            placeholder={{ label: "Select Department", value: "" }}
-            items={[
-              { label: "Physics", value: "Physics" },
-              { label: "Computer Science", value: "CSC" },
-              { label: "Mathematics", value: "Math" },
-            ]}
-            style={pickerSelectStyles}
+            onValueChange={(v) => setDepartment(Number(v))}
+            items={departments}
+            placeholder={{
+              label: departments.length
+                ? "Select Department"
+                : "Select Faculty First",
+              value: null,
+            }}
+            style={pickerStyles}
           />
-        </View>
+        </Field>
 
-        {/* LEVEL */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Level</Text>
+        <Field label="Level">
           <RNPickerSelect
-            onValueChange={setLevel}
-            placeholder={{ label: "Select Level", value: "" }}
-            items={[
-              { label: "100 Level", value: "100" },
-              { label: "200 Level", value: "200" },
-              { label: "300 Level", value: "300" },
-              { label: "400 Level", value: "400" },
-            ]}
-            style={pickerSelectStyles}
+            onValueChange={(v) => setLevel(Number(v))}
+            items={levels}
+            placeholder={{
+              label: levels.length
+                ? "Select Level"
+                : "Select Department First",
+              value: null,
+            }}
+            style={pickerStyles}
           />
-        </View>
+        </Field>
 
-        {/* SEMESTER */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Semester</Text>
+        <Field label="Semester">
           <RNPickerSelect
-            onValueChange={setSemester}
-            placeholder={{ label: "Select Semester", value: "" }}
-            items={[
-              { label: "First Semester", value: "1" },
-              { label: "Second Semester", value: "2" },
-            ]}
-            style={pickerSelectStyles}
+            onValueChange={(v) => setSemester(Number(v))}
+            items={semesters}
+            placeholder={{
+              label: semesters.length
+                ? "Select Semester"
+                : "Select Level First",
+              value: null,
+            }}
+            style={pickerStyles}
           />
-        </View>
+        </Field>
 
-        {/* EMAIL */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Email</Text>
+        <Field label="Email">
           <TextInput
-            placeholder="Enter email"
             style={styles.input}
+            placeholder="Enter email"
+            autoCapitalize="none"
             value={email}
             onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
           />
-        </View>
+        </Field>
 
-        {/* PASSWORD */}
-        <View style={styles.field}>
-          <Text style={styles.label}>Password</Text>
+        <Field label="Password">
           <TextInput
-            placeholder="Enter password"
             style={styles.input}
+            placeholder="Enter password"
             secureTextEntry
             value={password}
             onChangeText={setPassword}
           />
-        </View>
+        </Field>
 
-        {/* BUTTON */}
         <TouchableOpacity style={styles.btn} onPress={handleSignUp}>
-          <Text style={styles.btnText}>Create Account</Text>
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>Create Account</Text>
+          )}
         </TouchableOpacity>
 
-        {/* LOGIN LINK */}
-        <View style={styles.bottomTextContainer}>
-          <Text style={styles.bottomText}>Already have an account?</Text>
-          <TouchableOpacity onPress={() => router.push("/login")}>
-            <Text style={styles.bottomLink}> Login</Text>
-          </TouchableOpacity>
-        </View>
+        <View style={{ height: 40 }} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    padding: 24,
-  },
-
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#1A1A1A",
-  },
-
-  subtitle: {
-    fontSize: 15,
-    color: "#6B6B6B",
-    marginTop: 4,
-    marginBottom: 28,
-  },
-
-  field: {
-    marginBottom: 18,
-  },
-
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#3D3D3D",
-    marginBottom: 6,
-  },
-
+  container: { flex: 1, backgroundColor: "#fff", padding: 24 },
+  title: { fontSize: 28, fontWeight: "700", marginBottom: 20 },
+  label: { fontSize: 14, fontWeight: "500", marginBottom: 6, color: "#333" },
   input: {
     height: 52,
-    borderRadius: 12,
     backgroundColor: "#F3F3F5",
+    borderRadius: 12,
     paddingHorizontal: 14,
-    fontSize: 15,
   },
-
   btn: {
     backgroundColor: "#3D5AFE",
     paddingVertical: 15,
     borderRadius: 12,
     alignItems: "center",
-    marginTop: 14,
+    marginTop: 20,
   },
-
-  btnText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-
-  bottomTextContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginTop: 18,
-    marginBottom: 40,
-  },
-
-  bottomText: {
-    color: "#444",
-    fontSize: 14,
-  },
-
-  bottomLink: {
-    color: "#3D5AFE",
-    fontSize: 14,
-    fontWeight: "600",
-  },
+  btnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
 });
 
-// Picker style
-const pickerSelectStyles = {
+const pickerStyles = {
   inputIOS: {
     height: 52,
-    borderRadius: 12,
     backgroundColor: "#F3F3F5",
+    borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
-    fontSize: 15,
   },
   inputAndroid: {
     height: 52,
-    borderRadius: 12,
     backgroundColor: "#F3F3F5",
+    borderRadius: 12,
     paddingHorizontal: 14,
-    fontSize: 15,
-  }
+  },
 };

@@ -1,27 +1,28 @@
-// app/utils/api.ts
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 
-const API_BASE = "http://10.0.2.2:8000"; // Android emulator
-// const API_BASE = "http://localhost:8000"; // 
+// Use your PC's LAN IP so your phone can reach the dev server.
+// Replace 192.168.1.42 with your computer's local IP (same Wi‑Fi).
+const API_URL = "https://edbafbbae30b.ngrok-free.app/api/students";
 
+// Alternatives:
+// const API_URL = "http://10.0.2.2:8000"; // Android emulator
+// const API_URL = "http://localhost:8000"; // iOS simulator
 
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_URL,
 });
 
-// Load token before each request
+// Attach token
 api.interceptors.request.use(async (config) => {
   const access = await SecureStore.getItemAsync("access");
-  if (access) {
-    config.headers.Authorization = `Bearer ${access}`;
-  }
+  if (access) config.headers.Authorization = `Bearer ${access}`;
   return config;
 });
 
-// Auto refresh token on 401
+// Auto refresh token
 api.interceptors.response.use(
-  (res) => res,
+  (r) => r,
   async (error) => {
     const original = error.config;
 
@@ -30,22 +31,13 @@ api.interceptors.response.use(
 
       const refresh = await SecureStore.getItemAsync("refresh");
 
-      if (!refresh) {
-        return Promise.reject(error);
-      }
+      const resp = await axios.post(`${API_URL}/auth/refresh/`, { refresh });
 
-      try {
-        const resp = await axios.post(`${API_BASE}/api/auth/refresh/`, {
-          refresh,
-        });
+      await SecureStore.setItemAsync("access", resp.data.access);
 
-        await SecureStore.setItemAsync("access", resp.data.access);
+      original.headers.Authorization = `Bearer ${resp.data.access}`;
 
-        original.headers.Authorization = `Bearer ${resp.data.access}`;
-        return api(original);
-      } catch (err) {
-        return Promise.reject(err);
-      }
+      return api(original);
     }
 
     return Promise.reject(error);
@@ -53,4 +45,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-export { API_BASE };

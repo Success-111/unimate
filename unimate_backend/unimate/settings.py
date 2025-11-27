@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-+wy)&5hgg8rr^+p-p-@_i=_8oh($=&z#5^$=kkhnvxtqd*9mjp
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*", "10.83.15.232", "127.0.0.1", "localhost"]
 
 
 # Application definition
@@ -128,11 +128,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings for development
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:19006",   # expo dev on web
-    "http://localhost:8081",    # metro bundler
-    "exp://127.0.0.1:19000",    # expo tunnel
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 # REST Framework and JWT settings
 REST_FRAMEWORK = {

@@ -14,7 +14,7 @@ export default function TabsLayout() {
     let mounted = true;
     (async () => {
       try {
-        await client.get("/api/auth/verify/");
+        await client.get("/auth/verify/");
         if (mounted) setLoading(false);
       } catch (e) {
         router.replace("/login");
