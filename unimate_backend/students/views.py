@@ -1,4 +1,6 @@
 from rest_framework import generics
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.models import User
 
@@ -81,3 +83,11 @@ class SemesterListView(generics.ListAPIView):
         if level:
             queryset = queryset.filter(level_id=level)
         return queryset
+
+class VerifyView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({"detail": "Token is valid"})
+
+
