@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-+wy)&5hgg8rr^+p-p-@_i=_8oh($=&z#5^$=kkhnvxtqd*9mjp
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*", "10.83.15.232", "127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["*", "10.83.15.232", "127.0.0.1", "localhost", "https://4a66204e0ea6.ngrok-free.app"]
 
 
 # Application definition
@@ -127,6 +127,12 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Trusted origins for CSRF
+CSRF_TRUSTED_ORIGINS = [
+    "https://4a66204e0ea6.ngrok-free.app"
+]    
+
+
 # CORS settings for development
 CORS_ALLOW_ALL_ORIGINS = True
 
@@ -138,9 +144,11 @@ REST_FRAMEWORK = {
 }
 
 from datetime import timedelta
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }

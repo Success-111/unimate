@@ -5,7 +5,15 @@ export async function saveTokens(access: string, refresh: string) {
   await SecureStore.setItemAsync("refresh", refresh);
 }
 
-export async function logout() {
+export async function getAccess() {
+  return await SecureStore.getItemAsync("access");
+}
+
+export async function getRefresh() {
+  return await SecureStore.getItemAsync("refresh");
+}
+
+export async function clearTokens() {
   await SecureStore.deleteItemAsync("access");
   await SecureStore.deleteItemAsync("refresh");
 }

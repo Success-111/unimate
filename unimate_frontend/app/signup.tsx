@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import RNPickerSelect from "react-native-picker-select";
 import { useRouter } from "expo-router";
-import api from "./utils/api";
-import { saveTokens } from "./utils/auth";
+import api from "../utils/api";
+import { saveTokens } from "../utils/auth";
 
 type Option = { label: string; value: number };
 

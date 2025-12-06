@@ -10,8 +10,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import api from "./utils/api";
-import { saveTokens } from "./utils/auth";
+import api from "../utils/api";
+import { saveTokens } from "../utils/auth";
 
 export default function Login() {
   const router = useRouter();

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { clearAuthToken } from '../utils/auth';
+import { clearAuthToken } from '../../utils/auth';
 
 export default function Profile() {
   const router = useRouter();

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Tabs } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import client from "../../app/utils/api";
+import client from "../../utils/api";
 import { useRouter } from "expo-router";
 
 
