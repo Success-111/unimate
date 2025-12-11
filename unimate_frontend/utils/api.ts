@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getAccess, getRefresh, saveTokens, clearTokens } from "./auth";
 
-const API_URL = "https://d45585a47804.ngrok-free.app/api/students";
+const API_URL = "https://4bbf52a44613.ngrok-free.app/api/students";
 
 const api = axios.create({
   baseURL: API_URL,

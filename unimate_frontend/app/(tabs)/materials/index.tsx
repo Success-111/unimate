@@ -2,57 +2,63 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-const mockNotes = [
-  { id: '1', title: 'Intro to Mechanics', size: '2.4 MB', type: 'PDF', downloaded: true },
-  { id: '2', title: "Newton's Laws", size: '1.8 MB', type: 'PDF', downloaded: false },
-];
-
-const mockSlides = [
-  { id: '3', title: 'Mechanics Slides 1', size: '3.2 MB', type: 'PPTX', downloaded: false },
-  { id: '4', title: 'Motion & Forces Slides', size: '2.1 MB', type: 'PPTX', downloaded: true },
-];
-
-const mockPastQuestions = [
-  { id: '5', title: 'PHY101 PQ 2018', size: '850 KB', type: 'PDF', downloaded: false },
-  { id: '6', title: 'PHY101 PQ 2020', size: '920 KB', type: 'PDF', downloaded: false },
-];
-
-const mockEbooks = [
-  { id: '7', title: 'Physics Foundations eBook', size: '5.6 MB', type: 'EPUB', downloaded: true },
-];
+import api from "@/utils/api";
 
 // Icon Resolver based on File Type
 function getIcon(type: string) {
   switch (type.toUpperCase()) {
-    case "PDF":
-      return "document-text-outline";
-    case "PPTX":
-      return "tv-outline";
-    case "EPUB":
-      return "book-outline";
-    default:
-      return "document-outline";
+    case "NOTE": return "document-text-outline";
+    case "SLIDE": return "tv-outline";
+    case "PAST": return "help-circle-outline";
+    case "EBOOK": return "book-outline";
+    default: return "document-outline";
   }
 }
 
 export default function Materials() {
-  const { course } = useLocalSearchParams<{ course?: string }>();
+  const { courseCode } = useLocalSearchParams<{ courseCode?: string }>();
   const [activeTab, setActiveTab] = useState<'notes' | 'slides' | 'past' | 'ebook'>('notes');
-  const [data, setData] = useState(mockNotes);
+  const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
-    if (activeTab === 'notes') setData(mockNotes);
-    if (activeTab === 'slides') setData(mockSlides);
-    if (activeTab === 'past') setData(mockPastQuestions);
-    if (activeTab === 'ebook') setData(mockEbooks);
+    const fetchMaterials = async () => {
+      try {
+        const typeMap = {
+          notes: "NOTE",
+          slides: "SLIDE",
+          past: "PAST",
+          ebook: "EBOOK",
+        };
+
+        const res = await api.get("/materials/", {
+          params: {
+            course: courseCode,
+            category: typeMap[activeTab],
+          },
+        });
+
+        const materials = res.data.map((m: any) => ({
+          id: m.id.toString(),
+          title: m.title,
+          size: "—",
+          type: m.category,
+          downloaded: false,
+        }));
+
+        setData(materials);
+      } catch (err) {
+        console.log("MATERIAL FETCH ERROR:", err.response?.data ?? err);
+      }
+    };
+
+    fetchMaterials();
   }, [activeTab]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <View style={styles.header}>
         <Text style={styles.title}>Course Materials</Text>
-        <Text style={styles.subtitle}>{course ?? 'Course'}</Text>
+        <Text style={styles.subtitle}>{courseCode ?? 'Course'}</Text>
       </View>
 
       {/* Tabs */}
@@ -82,7 +88,6 @@ export default function Materials() {
         contentContainerStyle={{ padding: 16 }}
         renderItem={({ item }) => (
           <View style={styles.item}>
-            {/* ICON */}
             <Ionicons
               name={getIcon(item.type)}
               size={28}
@@ -90,7 +95,6 @@ export default function Materials() {
               style={{ marginRight: 12 }}
             />
 
-            {/* TEXT */}
             <View style={{ flex: 1 }}>
               <Text style={{ fontWeight: '600' }}>{item.title}</Text>
               <Text style={{ color: '#616161' }}>
@@ -98,7 +102,6 @@ export default function Materials() {
               </Text>
             </View>
 
-            {/* Download */}
             <TouchableOpacity style={styles.download}>
               <Text style={{ color: item.downloaded ? '#10B981' : '#3D5AFE' }}>
                 {item.downloaded ? 'Saved' : 'Download'}
